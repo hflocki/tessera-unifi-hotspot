@@ -1,5 +1,7 @@
 {
-  "_meta": { "name": "English" },
+  "_meta": {
+    "name": "English"
+  },
   "screen": {
     "refresh": "Refresh",
     "create": "Create",
@@ -23,6 +25,8 @@
     "show_wlan": "Network name",
     "show_wlan_hint": "The guest network's name above the code.",
     "show_duration": "Validity",
-    "show_duration_hint": "How long the voucher is valid, under the code."
+    "show_duration_hint": "How long the voucher is valid, under the code.",
+    "qr_only": "QR code only",
+    "qr_only_hint": "Only the QR code, as large as the tile. A 1x1 tile shows it alone anyway."
   }
 }

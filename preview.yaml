@@ -5,7 +5,7 @@ tiles:
     name: Guest Wi-Fi
     entity: image.guest_qr_code
     options: { voucher: sensor.guest_voucher, refresh: button.guest_update, create: button.guest_create }
-    sizes: [4x2, 3x2, 2x1, 2x2, 4x3]
+    sizes: [4x2, 3x2, 2x1, 2x2, 1x1, 1x2, 4x3, 6x4]
   - tile: hotspot
     name: Code only
     entity: image.guest_qr_code

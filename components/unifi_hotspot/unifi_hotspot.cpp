@@ -10,13 +10,17 @@ namespace ui = tessera::ui;
 static const char *const PRESS = "button.press";
 // How long a key shows that its press was sent, in seconds.
 static const uint32_t SENT_SECONDS = 3;
+// Icons of Tessera's set for keys too narrow for their words: refresh-auto and plus.
+static const uint32_t ICON_REFRESH = 0xF18F2;
+static const uint32_t ICON_PLUS = 0xF0415;
 
 enum Key : uint8_t { REFRESH = 0, CREATE = 1, KEYS = 2 };
 
 // The tile: the QR code of the guest network on the left (on top when the tile is narrow), beside it the network's
 // name, the voucher code large, how long the voucher is valid, and two keys that press the integration's buttons.
 // The QR code is the tile's own image entity, shown by name (camera:<entity>, plugin API 0.17). On a board without
-// pictures (the CYD) the words and keys take the whole card.
+// pictures (the CYD) the words and keys take the whole card. On a card too small for words and keys, or with the option
+// QR code only, the QR code fills the card alone.
 class HotspotTile : public tessera::Tile {
  public:
   explicit HotspotTile(const tessera::Plugin *plugin) : plugin_(plugin) {}
@@ -27,37 +31,70 @@ class HotspotTile : public tessera::Tile {
     buttons_[CREATE] = c.options["create"] | "";
     show_wlan_ = c.options["show_wlan"] | true;
     show_duration_ = c.options["show_duration"] | true;
+    const bool qr_only = c.options["qr_only"] | false;
 
     const int w = c.width, h = c.height;
     const int gap = ui::px(12), small = ui::px(4);
     const int bh = ui::line_height(Font::BODY);
-    const bool keys = !buttons_[REFRESH].empty() || !buttons_[CREATE].empty();
+    bool keys = !buttons_[REFRESH].empty() || !buttons_[CREATE].empty();
     key_h_ = std::max(ui::mm(8), ui::line_height(Font::BODY_LARGE) + ui::px(10));
+    const int min_qr = ui::mm(15);
 
-    // The words and keys as one block; what does not fit goes, the least important first.
+    // The words and keys as one block, its code in the largest font that fits.
     code_font_ = Font::VALUE;
     auto block = [&]() {
       return (show_wlan_ ? bh + small : 0) + ui::line_height(code_font_) + (show_duration_ ? small + bh : 0) +
              (keys ? gap + key_h_ : 0);
     };
+    // What does not fit goes, the least important first; false when not even the code and the keys fit.
+    auto shrink = [&](int room) {
+      if (block() > room) code_font_ = Font::HEADLINE;
+      if (block() > room) show_duration_ = false;
+      if (block() > room) show_wlan_ = false;
+      if (block() > room) code_font_ = Font::TITLE;
+      return block() <= room;
+    };
 
-    // Where the QR code goes: beside the words on a wide tile, above them on a narrow one.
+    // The QR code alone, as large as the card.
+    const bool pictures = ui::pictures();
+    auto qr_alone = [&]() {
+      const int side = std::min(w, h);
+      place_ = ui::picture(c.parent);
+      lv_obj_set_size(place_, side, side);
+      lv_obj_set_pos(place_, (w - side) / 2, (h - side) / 2);
+    };
+    if (pictures && qr_only) return qr_alone();
+
+    // Where the QR code goes: beside the words on a wide card, above them on a tall one, nowhere when it would be
+    // smaller than a phone can read.
     int x0 = 0, cw = w, top = 0, room = h;
     bool centred = true;
-    if (ui::pictures()) {
+    if (pictures) {
       if (w >= h * 6 / 5) {
+        // Beside: as high as the card, but leave the words at least 55 % of the width.
         const int side = std::min(h, w * 45 / 100);
-        place_ = ui::picture(c.parent);
-        lv_obj_set_size(place_, side, side);
-        lv_obj_set_pos(place_, 0, (h - side) / 2);
-        x0 = side + gap;
-        cw = w - x0;
-        centred = false;
+        if (side >= min_qr) {
+          place_ = ui::picture(c.parent);
+          lv_obj_set_size(place_, side, side);
+          lv_obj_set_pos(place_, 0, (h - side) / 2);
+          x0 = side + gap;
+          cw = w - x0;
+          centred = false;
+        }
       } else {
-        // Under the code: the code and the keys at least.
-        const int under = ui::line_height(Font::HEADLINE) + (keys ? gap + key_h_ : 0) + gap;
+        // Above: what the code and the keys leave of the height.
+        const Font keep = code_font_;
+        show_wlan_ = show_duration_ = false;
+        code_font_ = Font::HEADLINE;
+        const int under = block() + gap;
+        code_font_ = keep;
+        show_wlan_ = c.options["show_wlan"] | true;
+        show_duration_ = c.options["show_duration"] | true;
+        // The QR code is never wider than the card.
         const int side = std::min(w, h - under);
-        if (side >= ui::mm(15)) {
+        // A small square card (1x1) has no room for both: the QR code alone, which is what a guest needs.
+        if (side < min_qr && !entity_.empty()) return qr_alone();
+        if (side >= min_qr) {
           place_ = ui::picture(c.parent);
           lv_obj_set_size(place_, side, side);
           lv_obj_set_pos(place_, (w - side) / 2, 0);
@@ -66,10 +103,10 @@ class HotspotTile : public tessera::Tile {
         }
       }
     }
-    if (block() > room) code_font_ = Font::HEADLINE;
-    if (block() > room) show_duration_ = false;
-    if (block() > room) show_wlan_ = false;
-    if (block() > room) code_font_ = Font::TITLE;
+    if (!shrink(room)) {
+      keys = false;   // without room for the keys, the code alone
+      shrink(room);
+    }
 
     width_ = cw;
     const lv_text_align_t align = centred ? LV_TEXT_ALIGN_CENTER : LV_TEXT_ALIGN_LEFT;
@@ -89,13 +126,16 @@ class HotspotTile : public tessera::Tile {
       duration_ = line(Font::BODY, theme::MUTED, bh);
     }
 
-    // The keys: side by side across the column, each as wide as half of it, or the whole of it alone.
+    // The keys: side by side across the column, each half of it, or the whole of it alone; never wider than a key
+    // needs on a large card.
     if (keys) {
       y += gap;
       key_y_ = y;
-      const int both = !buttons_[REFRESH].empty() && !buttons_[CREATE].empty();
-      const int kw = both ? (cw - gap) / 2 : cw;
-      int x = x0;
+      const bool both = !buttons_[REFRESH].empty() && !buttons_[CREATE].empty();
+      const int most = ui::mm(45);
+      const int kw = std::min(both ? (cw - gap) / 2 : cw, most);
+      const int row = both ? 2 * kw + gap : kw;
+      int x = centred ? x0 + (cw - row) / 2 : x0;
       for (int k = 0; k < KEYS; ++k) {
         if (buttons_[k].empty()) continue;
         key_[k] = ui::block(c.parent, k == CREATE ? theme::ACCENT : theme::RAISED);
@@ -147,6 +187,7 @@ class HotspotTile : public tessera::Tile {
   }
 
   void on_tap() override {
+    if (!code_) return;
     const tessera::Point p = tessera::tap_point();
     if (p.y < key_y_ - ui::px(8) || p.y > key_y_ + key_h_ + ui::px(8)) return;
     for (int k = 0; k < KEYS; ++k) {
@@ -167,6 +208,7 @@ class HotspotTile : public tessera::Tile {
 
  private:
   void paint() {
+    if (!code_) return;   // the QR code alone
     // The code: as large as the block allows and the column's width takes.
     std::string code = roomy::plain(code_text_);
     const bool none = !has_voucher_ || code.empty() || code == "unavailable" || code == "unknown";
@@ -199,8 +241,18 @@ class HotspotTile : public tessera::Tile {
       const theme::Role ink = k == CREATE ? theme::ON_ACCENT : theme::INK;
       ui::set_fill(key_[k], tessera::Tone::NORMAL, ground);
       const char *word = failed_[k] ? "failed" : sent_[k] ? "sent" : k == CREATE ? "create" : "refresh";
-      ui::set_text(key_label_[k], plugin_->text(word));
-      ui::set_color(key_label_[k], ink);
+      const std::string text = plugin_->text(word);
+      // A narrow key shows its icon instead of its word; a sent press is then green, a failed one red.
+      if (ui::text_width(text, Font::BODY_LARGE) > key_w_[k] - ui::px(8)) {
+        ui::set_font(key_label_[k], Font::ICON_SMALL);
+        ui::set_text(key_label_[k], ui::icon(k == CREATE ? ICON_PLUS : ICON_REFRESH));
+        ui::set_tone(key_label_[k], failed_[k] ? tessera::Tone::ALERT : sent_[k] ? tessera::Tone::GOOD
+                                                                                : tessera::Tone::NORMAL, ink);
+      } else {
+        ui::set_font(key_label_[k], Font::BODY_LARGE);
+        ui::set_text(key_label_[k], text);
+        ui::set_color(key_label_[k], ink);
+      }
     }
   }
 

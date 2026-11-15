@@ -2,7 +2,7 @@
 # join, the network's name, the current voucher with how long it is valid, and keys to refresh it or create a new one.
 # Every field is explained in docs/MANIFEST.md of tessera-plugins.
 id: unifi_hotspot
-version: 0.1.0
+version: 0.2.0
 # 0.17: the image entity's own picture by name (camera:<entity>), on_picture; 0.15: options of kind entity.
 api: "0.17"
 icon: wifi
@@ -23,7 +23,7 @@ tiles:
   - id: hotspot
     name: tile_name
     icon: wifi
-    sizes: { min: 2x1, max: 4x3 }
+    sizes: { min: 1x1, max: 6x6 }
     # Three labels, two keys with their words, one place for a picture and a few short texts.
     memory: 1300
     # One place: the QR code of the tile's own image entity.
@@ -39,4 +39,5 @@ tiles:
       - { id: refresh, kind: entity, domains: [button], label: refresh, hint: refresh_hint }
       - { id: create, kind: entity, domains: [button], label: create, hint: create_hint }
       - { id: show_wlan, kind: toggle, default: true, label: show_wlan, hint: show_wlan_hint }
+      - { id: qr_only, kind: toggle, default: false, label: qr_only, hint: qr_only_hint }
       - { id: show_duration, kind: toggle, default: true, label: show_duration, hint: show_duration_hint }
