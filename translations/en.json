@@ -1,0 +1,28 @@
+{
+  "_meta": { "name": "English" },
+  "screen": {
+    "refresh": "Refresh",
+    "create": "Create",
+    "sent": "Sent",
+    "failed": "Not sent",
+    "valid_for": "Valid for {d}",
+    "no_voucher": "No voucher",
+    "choose_voucher": "Choose the voucher"
+  },
+  "app": {
+    "name": "UniFi hotspot",
+    "summary": "Your guest Wi-Fi on a tile: the QR code, the current voucher and keys to make a new one.",
+    "tile_name": "Guest Wi-Fi",
+    "tile_example": "QR code · 12345-67890 · Valid for 8 h",
+    "voucher": "Voucher",
+    "voucher_hint": "The voucher sensor of UniFi Hotspot Manager (sensor.<id>_voucher). Its state is the code.",
+    "refresh": "Refresh key",
+    "refresh_hint": "The integration's update button (button.<id>_update). Leave it empty for no key.",
+    "create": "Create key",
+    "create_hint": "The integration's create button (button.<id>_create). Leave it empty for no key.",
+    "show_wlan": "Network name",
+    "show_wlan_hint": "The guest network's name above the code.",
+    "show_duration": "Validity",
+    "show_duration_hint": "How long the voucher is valid, under the code."
+  }
+}

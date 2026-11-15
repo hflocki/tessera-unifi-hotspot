@@ -1,0 +1,28 @@
+{
+  "_meta": { "name": "Deutsch" },
+  "screen": {
+    "refresh": "Aktualisieren",
+    "create": "Neu",
+    "sent": "Gesendet",
+    "failed": "Fehler",
+    "valid_for": "Gültig: {d}",
+    "no_voucher": "Kein Voucher",
+    "choose_voucher": "Voucher wählen"
+  },
+  "app": {
+    "name": "UniFi Hotspot",
+    "summary": "Dein Gäste-WLAN auf einer Kachel: QR-Code, aktueller Voucher und Tasten für einen neuen.",
+    "tile_name": "Gäste-WLAN",
+    "tile_example": "QR-Code · 12345-67890 · Gültig: 8 h",
+    "voucher": "Voucher",
+    "voucher_hint": "Der Voucher-Sensor von UniFi Hotspot Manager (sensor.<id>_voucher). Sein Zustand ist der Code.",
+    "refresh": "Taste Aktualisieren",
+    "refresh_hint": "Der Update-Button der Integration (button.<id>_update). Leer lassen für keine Taste.",
+    "create": "Taste Neu",
+    "create_hint": "Der Create-Button der Integration (button.<id>_create). Leer lassen für keine Taste.",
+    "show_wlan": "Netzwerkname",
+    "show_wlan_hint": "Der Name des Gäste-WLANs über dem Code.",
+    "show_duration": "Gültigkeit",
+    "show_duration_hint": "Wie lange der Voucher gilt, unter dem Code."
+  }
+}

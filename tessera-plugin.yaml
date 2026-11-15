@@ -1,0 +1,42 @@
+# UniFi hotspot: the guest Wi-Fi of the UniFi Hotspot Manager integration (unifi_voucher) on one tile: the QR code to
+# join, the network's name, the current voucher with how long it is valid, and keys to refresh it or create a new one.
+# Every field is explained in docs/MANIFEST.md of tessera-plugins.
+id: unifi_hotspot
+version: 0.1.0
+# 0.17: the image entity's own picture by name (camera:<entity>), on_picture; 0.15: options of kind entity.
+api: "0.17"
+icon: wifi
+maintainer: hflocki
+license: MIT
+stage: beta
+topics: [home, tech]
+requires:
+  esphome: 2026.6.2
+boards: any
+flash_kb: 8
+
+permissions:
+  # The two keys press the integration's buttons (Refresh and Create).
+  home_assistant_actions: [button.press]
+
+tiles:
+  - id: hotspot
+    name: tile_name
+    icon: wifi
+    sizes: { min: 2x1, max: 4x3 }
+    # Three labels, two keys with their words, one place for a picture and a few short texts.
+    memory: 1300
+    # One place: the QR code of the tile's own image entity.
+    pictures: 1
+    # The tile's entity is the integration's QR code (image.<id>_qr_code); the network's name is its attribute.
+    domains: [image]
+    attributes: [wlan_name]
+    example: tile_example
+    preview: { title: "{wlan_name}" }
+    options:
+      - { id: voucher, kind: entity, domains: [sensor], attributes: [wlan_name, duration], label: voucher,
+          hint: voucher_hint }
+      - { id: refresh, kind: entity, domains: [button], label: refresh, hint: refresh_hint }
+      - { id: create, kind: entity, domains: [button], label: create, hint: create_hint }
+      - { id: show_wlan, kind: toggle, default: true, label: show_wlan, hint: show_wlan_hint }
+      - { id: show_duration, kind: toggle, default: true, label: show_duration, hint: show_duration_hint }

@@ -1,0 +1,30 @@
+# What tools/preview.py shows (docs/PREVIEW.md): a made-up guest network with a voucher, its QR code from the file
+# below, and both keys.
+tiles:
+  - tile: hotspot
+    name: Guest Wi-Fi
+    entity: image.guest_qr_code
+    options: { voucher: sensor.guest_voucher, refresh: button.guest_update, create: button.guest_create }
+    sizes: [4x2, 3x2, 2x1, 2x2, 4x3]
+  - tile: hotspot
+    name: Code only
+    entity: image.guest_qr_code
+    options: { voucher: sensor.guest_voucher, create: button.guest_create, show_wlan: false }
+    sizes: [2x1]
+
+states:
+  image.guest_qr_code:
+    state: "{now}"
+    attributes: { friendly_name: Guest QR code, wlan_name: Example Guest }
+  sensor.guest_voucher:
+    state: "48213-90577"
+    attributes: { friendly_name: Voucher, wlan_name: Example Guest, duration: "8 h" }
+  button.guest_update:
+    state: unknown
+    attributes: { friendly_name: Update }
+  button.guest_create:
+    state: unknown
+    attributes: { friendly_name: Create }
+
+pictures:
+  "camera:image.guest_qr_code": preview/qr.png
